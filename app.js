@@ -3,12 +3,14 @@ const app = express();
 const bodyParser = require('body-parser');
 const compiler = require("compilex");
 const options = { stats: true };
+const path = require('path');
+
 
 
 compiler.init(options);
 
  
-app.use("/codemirror-5.65.18", express.static("D:/Projects/RCE_System/codemirror-5.65.18"))
+app.use("/codemirror-5.65.18", express.static(path.join(__dirname, "codemirror-5.65.18")));
 app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
