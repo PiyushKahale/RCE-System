@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
     compiler.flush(() => {
-        console.log("File Deleted....");
+        console.log("File Deleted...."); 
     })
     res.sendFile("D:/Projects/RCE_System/index.html");
 }); 
