@@ -5,99 +5,68 @@ const compiler = require("compilex");
 const options = { stats: true };
 const path = require('path');
 
-
-
 compiler.init(options);
 
- 
+// Serve the CodeMirror files from a relative path
 app.use("/codemirror-5.65.18", express.static(path.join(__dirname, "codemirror-5.65.18")));
 app.use(bodyParser.json());
 
+// Serve the index.html file from a relative path
 app.get("/", (req, res) => {
     compiler.flush(() => {
         console.log("File Deleted...."); 
-    })
-    res.sendFile("D:/Projects/RCE_System/index.html");
+    });
+    res.sendFile(path.join(__dirname, "index.html")); // Changed to relative path
 }); 
 
 app.post("/compile", (req, res) => {
-    var code = req.body.code;
-    var input = req.body.input;
-    var lang = req.body.lang;
+    const code = req.body.code;
+    const input = req.body.input;
+    const lang = req.body.lang;
 
-    try{
-        if(lang == "C++" || lang == "C") {
-            if(!input) {
-                // for windows
-                var envData = { OS : "windows" , cmd : "g++", options:{setTimeout: 10000 }}; // (uses g++ command to compile )
-                compiler.compileCPP(envData , code , function (data) {
-                    if(data.output) {
-                        res.send(data);
-                    } else {
-                        res.send({output: "error"});
-                    }
-                });
-            } else {
-                //for windows  
-                var envData = { OS : "windows" , cmd : "g++", options:{setTimeout: 10000 }}; // (uses g++ command to compile )
-                compiler.compileCPPWithInput(envData , code , input , function (data) {
-                    if(data.output) {
-                        res.send(data);
-                    } else {
-                        res.send({output: "error"});
-                    }
-                });
-            }
-        }
-        else if(lang == "Java") {
-            if(!input) {
-                var envData = { OS : "windows" }; 
-                compiler.compileJava( envData , code , function(data){
-                    if(data.output) {
-                        res.send(data);
-                    }else {
-                        res.send({output: "error"});
-                    }
-                }); 
-            } else {
-                    //if windows  
-                var envData = { OS : "windows"}; 
-                compiler.compileJavaWithInput( envData , code , input ,  function(data){
-                    if(data.output) {
-                        res.send(data);
-                    }else {
-                        res.send({output: "error"});
-                    }
-                });
-            }
-        }
-        else if(lang == "Python") {
-            if(!input) {
-                var envData = { OS : "windows"}; 
-                compiler.compilePython( envData , code , function(data){
-                    if(data.output) {
-                        res.send(data);
-                    } else {
-                        res.send({output: "error"});
-                    }
-                });    
-            } else {
-                var envData = { OS : "windows"};  
-                compiler.compilePythonWithInput( envData , code , input ,  function(data){
-                   if(data.output) {
-                    res.send(data);
-                   } else {
-                    res.send({output: "error"});
-                   }
-                });
-            }
-        }
-    } catch(err) {
-        console.log(err);
-        console.log("Error Occurs...");
-    }    
-})
+    try {
+        let envData = { OS: "windows", cmd: "g++", options: { setTimeout: 10000 } }; // Default to C++
 
-app.listen(8080, (req, res) => {
+        if (lang === "C++" || lang === "C") {
+            if (!input) {
+                compiler.compileCPP(envData, code, (data) => {
+                    res.send(data.output ? data : { output: "error" });
+                });
+            } else {
+                compiler.compileCPPWithInput(envData, code, input, (data) => {
+                    res.send(data.output ? data : { output: "error" });
+                });
+            }
+        } else if (lang === "Java") {
+            envData = { OS: "windows" }; // Update environment for Java
+            if (!input) {
+                compiler.compileJava(envData, code, (data) => {
+                    res.send(data.output ? data : { output: "error" });
+                });
+            } else {
+                compiler.compileJavaWithInput(envData, code, input, (data) => {
+                    res.send(data.output ? data : { output: "error" });
+                });
+            }
+        } else if (lang === "Python") {
+            envData = { OS: "windows" }; // Update environment for Python
+            if (!input) {
+                compiler.compilePython(envData, code, (data) => {
+                    res.send(data.output ? data : { output: "error" });
+                });
+            } else {
+                compiler.compilePythonWithInput(envData, code, input, (data) => {
+                    res.send(data.output ? data : { output: "error" });
+                });
+            }
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ output: "error", message: "Internal Server Error" });
+    }
+});
+
+// Start the server
+app.listen(8080, () => {
     console.log("Server is Listening on port 8080...");
 });
